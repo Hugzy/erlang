@@ -24,4 +24,3 @@ get_file(Server, File) ->
       Content
   end.
 put_file(Server, file) ->
-  

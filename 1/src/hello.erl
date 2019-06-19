@@ -10,4 +10,7 @@
 -author("Magida").
 
 %% API
--export([]).
+-export([start/0]).
+start() ->
+  io:fwrite("Hello world"),
+  io:fwrite("|~10.5c|~-10.5c|~5c|~n", [$a, $b, $c]).
