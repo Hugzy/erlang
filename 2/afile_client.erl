@@ -10,7 +10,7 @@
 -author("Magida").
 
 %% API
--export([ls/1, get_file/2]).
+-export([ls/1, get_file/2, put_file/2]).
 ls(Server) ->
   Server ! {self(), list_dir},
   receive
@@ -23,4 +23,10 @@ get_file(Server, File) ->
     {Server, Content} ->
       Content
   end.
-put_file(Server, file) ->
+put_file(Server, Name) ->
+  Server ! {self(), Name},
+  receive
+    {Server, Name} ->
+      Name
+  end.
+
