@@ -1,5 +1,5 @@
 -module(lib_misc).
--export([sum/1, map/2, for/3]).
+-export([sum/1, qsort/1, map/2, for/3]).
 
 for(Max, Max, F) -> [F(Max)];
 for(I, Max, F)   -> [F(I)|for(I+2, Max, F)].
@@ -9,3 +9,9 @@ sum([])     -> 0.
 
 map(_, [])         -> [];
 map(F, [H|T])   -> [F(H) | map(F,T)].
+
+qsort([]) -> [];
+qsort([Pivot|T]) -> 
+    qsort([X || X <- T, X < Pivot])
+    ++ [Pivot] ++
+    qsort([X || X <- T, X >= Pivot]).
