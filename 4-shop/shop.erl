@@ -1,5 +1,7 @@
 -module(shop).
 -export([test/0, cost/1, total/1]).
+-import([])
+
 
 test() ->
     5 = cost(oranges),
