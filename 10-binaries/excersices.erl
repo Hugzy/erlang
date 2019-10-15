@@ -11,6 +11,8 @@ rev (<<H:1/binary, Rest/binary>>, Acc) ->
 term_to_packet(Term) ->
     Bin = term_to_binary(Term),
     Size = byte_size(Bin),
-    erlang:display("Binary", Bin),
-    erlang:display("Size", Size),
-    <<Size:32/binary, Bin/binary>>.
+    erlang:display(Bin),
+    erlang:display(Size),
+    <<Size:32, Bin/binary>>.
+
+
