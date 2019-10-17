@@ -1,5 +1,5 @@
 -module(excersices).
--export([rev/2, term_to_packet/1]).
+-export([rev/2, term_to_packet/1, packet_to_term/1]).
 
 rev (<<>>, Acc) -> Acc;
 % H:1/binary -> Value:Size/TypeSpecifierList, Rest/binary -> Value/TypeSpecifierList
@@ -13,6 +13,8 @@ term_to_packet(Term) ->
     Size = byte_size(Bin),
     erlang:display(Bin),
     erlang:display(Size),
-    <<Size:32, Bin/binary>>.
+    << 1:4/integer-unit:8, Size:Bin/integer-unit:8 >>.
 
-
+packet_to_term(Packet) ->
+    <<Size:32, _>> = Packet,
+    erlang:display(Size).
