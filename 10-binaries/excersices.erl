@@ -13,8 +13,14 @@ term_to_packet(Term) ->
     Size = byte_size(Bin),
     erlang:display(Bin),
     erlang:display(Size),
-    << 1:4/integer-unit:8, Size:Bin/integer-unit:8 >>.
+    <<Size:32, Bin/binary>>.
 
 packet_to_term(Packet) ->
-    <<Size:32, _>> = Packet,
-    erlang:display(Size).
+    Res = split_binary(Packet,4),
+    {<<Size:32>>,_} = Res,
+    {_, <<Binary:Size/binary>>} = Res,
+    Term = binary_to_term(Binary),
+    erlang:display(Term),
+    Term.
+
+
