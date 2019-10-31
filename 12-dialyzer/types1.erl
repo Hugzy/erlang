@@ -10,7 +10,8 @@ f2({H,M,S}) when is_integer(H) ->
 f3({H,M,S}) ->
     print(H,M,S),
     (H+M*60)*60+S.
-    print(H,M,S) ->
+
+print(H,M,S) ->
     Str = integer_to_list(H) ++ ":" ++ integer_to_list(M) ++ ":" ++
     integer_to_list(S),
     io:format("~s", [Str]).
