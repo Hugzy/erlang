@@ -1,7 +1,7 @@
 -module(area_server2).
 -export([loop/0, area/2, start/0]).
 
-
+ 
 start() -> spawn(area_server2, loop, []).
 
 area(Pid, What) -> 
