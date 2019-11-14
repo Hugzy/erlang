@@ -28,6 +28,6 @@ packet_to_term(Packet) ->
     Term = binary_to_term(Binary),
     Term.
 
-rev_binary(Binary) ->
-    <<A:1, B:1, C:1, D:1, E:1, F:1, G:1, H:1>> = Binary,
+rev_binary(Byte) ->
+    <<A:1, B:1, C:1, D:1, E:1, F:1, G:1, H:1>> = Byte,
     <<H:1, G:1, F:1, E:1, D:1, C:1, B:1, A:1>>.
