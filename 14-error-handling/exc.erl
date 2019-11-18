@@ -14,6 +14,9 @@ do_crash(Pid, Ref) ->
             io:format("I (parent) My worker ~p died (~p)~n", [Pid, Reason])
     end.
 
+do_crash(Pid) ->
+    Pid ! {msg, "do crash"}.
+
 start_process() ->
     N = erlang:system_time(millisecond),
     erlang:display("hello from crashing process"),
@@ -27,6 +30,39 @@ start_process() ->
             erlang:display("did nothing")
     end.
     
+on_exit(Pid, Fun) ->
+    spawn(fun() ->
+        Ref = monitor(process, Pid),
+            receive
+                {'DOWN', Ref, process, Pid, Why} ->
+                    Fun(Why);
+                _All ->
+                    io:format("something happened")
+        end
+    end).
+
+delay() ->
+    timer:sleep(10000).
+
+succes(true) ->
+    io:format("process was killed");
+succes(false) ->
+    io:format("process wasn't killed most likely because it is trapping normal exit signals").
+
+my_spawn3(Mod, Func, Args, Timer) ->
+        Pid = spawn(Mod, Func, Args),
+        receive
+        after
+            Timer ->
+                Response = exit(Pid, normal),
+                succes(Response)
+        end.
+
+my_spawn2(Mod, Func, Args) ->
+    Pid = spawn(Mod, Func, Args),
+    on_exit(Pid, fun(Why) -> io:format("'\nan error occured ~p", [Why]) end),
+    timer:sleep(2000),
+    do_crash(Pid).
 
 my_spawn(Mod, Func, Args) -> 
     {Pid, Ref} = spawn_monitor(Mod, Func, Args),
