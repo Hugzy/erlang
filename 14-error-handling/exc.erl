@@ -4,7 +4,7 @@
 
 
 test() ->
-    {Pid, Ref} = my_spawn(exc, start_process, []),
+    {Pid, Ref} = my_spawn(exc, process, [1000]),
     do_crash(Pid, Ref).
 
 do_crash(Pid, Ref) ->
@@ -17,7 +17,7 @@ do_crash(Pid, Ref) ->
 do_crash(Pid) ->
     Pid ! {msg, "do crash"}.
 
-start_process() ->
+process(Time) ->
     N = erlang:system_time(millisecond),
     erlang:display("hello from crashing process"),
     receive
@@ -28,8 +28,17 @@ start_process() ->
             exit("crashed");
         _ ->
             erlang:display("did nothing")
+    after 
+        Time ->
+            io:format("I am still alive"),
+            process(Time)
     end.
-    
+
+im_still_alive() ->
+    %io:format("i'm still alive"),
+    timer:sleep(5000),
+    im_still_alive().
+
 on_exit(Pid, Fun) ->
     spawn(fun() ->
         Ref = monitor(process, Pid),
@@ -39,7 +48,8 @@ on_exit(Pid, Fun) ->
                 _All ->
                     io:format("something happened")
         end
-    end).
+    end),
+    Pid.
 
 delay() ->
     timer:sleep(10000).
@@ -48,6 +58,20 @@ succes(true) ->
     io:format("process was killed");
 succes(false) ->
     io:format("process wasn't killed most likely because it is trapping normal exit signals").
+
+
+keep_alive(Fun) ->
+    process_flag(trap_exit, true),
+    Pid = spawn_link(Fun),
+    on_exit(Pid, fun(Why) ->
+        io:format("Process died: ~p, restarting it~n", [Why]),
+        io:format("Pid: ~p", [Pid]),
+        keep_alive(Fun),
+        Pid end),
+    Pid.
+
+exc4() ->
+    keep_alive(fun exc:im_still_alive/0).
 
 my_spawn3(Mod, Func, Args, Timer) ->
         Pid = spawn(Mod, Func, Args),
