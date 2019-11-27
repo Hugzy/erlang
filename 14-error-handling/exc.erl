@@ -17,6 +17,17 @@ do_crash(Pid, Ref) ->
 do_crash(Pid) ->
     Pid ! {msg, "do crash"}.
 
+kill(Pid, Time) ->
+    spawn(fun() ->
+            receive
+            after
+                Time ->
+                exit(Pid, kill),
+                io:format("killed process")
+            end
+        end
+    ).
+
 process(Time) ->
     N = erlang:system_time(millisecond),
     erlang:display("hello from crashing process"),
@@ -35,7 +46,7 @@ process(Time) ->
     end.
 
 im_still_alive() ->
-    %io:format("i'm still alive"),
+    io:format("i'm still alive"),
     timer:sleep(5000),
     im_still_alive().
 
@@ -68,10 +79,12 @@ keep_alive(Fun) ->
         io:format("Pid: ~p", [Pid]),
         keep_alive(Fun),
         Pid end),
-    Pid.
+    kill(Pid, 5000).
 
 exc4() ->
-    keep_alive(fun exc:im_still_alive/0).
+    Pid = keep_alive(fun exc:im_still_alive/0),
+    io:format("Pid: ~p", [Pid]).
+
 
 my_spawn3(Mod, Func, Args, Timer) ->
         Pid = spawn(Mod, Func, Args),
