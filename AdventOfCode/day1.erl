@@ -3,22 +3,34 @@
 -compile(export_all).
 
 test() ->
-    Mapped = map_fuel([12, 14, 1969, 100756]),
-    [2,2,654,33583] = Mapped,
-    34241 = calculate_total(Mapped),
+    Pids = map_fuel([12, 14, 1969, 100756]),
+    %[2,2,654,33583] = Mapped,
+    io:format("pid: ~p \n", [Pids]),
+    34241 = calculate_total(Pids),
     ok.
 
-calculate_total(Mapped) ->
+print(List) ->
+       io:fwrite("~w~n \n",[List]).
+
+calculate_total(Pids) ->
+    Mapped = [],
+    [receive {Pid, R} -> io:format("val: ~p \n", [R]), [R|Mapped] end || Pid <- Pids],
+    print(Mapped),
     lists:sum(Mapped).
 
 map_fuel(All) ->
     % could thread this
-    lists:map(fun(X) -> spawn(day1, calculate_fuel, [X]) end, All).
+    Main = self(),
+    List = lists:map(fun(X) -> spawn(day1, calculate_fuel, [X, Main]) end, All),
+    print(List),
+    List.
     
-calculate_fuel(Mass) ->
+calculate_fuel(Mass, Main) ->
     Temp = erlang:floor(Mass/3),
     Return_value = Temp - 2,
-    Return_value.
+    % Send the result back to main
+    io:format("result ~p \n", [Return_value]),
+    Main ! {self(), Return_value}.
 
 readlines(FileName) ->
     {ok, Device} = file:open(FileName, [read]),
