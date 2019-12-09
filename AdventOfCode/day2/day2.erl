@@ -45,34 +45,12 @@ num(L) ->
 insert(Place, Element, List) ->
     lists:sublist(List, (Place - 1)) ++ [Element] ++ lists:nthtail(Place + 1,List).
 
-% Returns the result of that specific operation.
-operation(1, Registry) ->
-    [Reg1, Reg2, Reg3] = Registry,
-    Res = add(Reg1, Reg2);
-    %insert(Reg3, Res, Data);
-operation(2, Registry) ->
-    [Reg1, Reg2, Reg3] = Registry,
-    Res = multiply(Reg1, Reg2).
-    %insert(Reg3, Res, Data);
 
-loop(List, L) when is_list(List), L > 0  ->
-    % Read OpCode
-    [Op_code | Tail] = List,
-    % Cannot do this incase the next three integers do not exist because the opcode 99 was received
-    if
-        Op_code == 99 ->
-            exit("Program halt");
-        true ->
-            ok
-    end,
-    Registry = lists:sublist(Tail, 3),
-    operation(Op_code, Registry),
-    [loop(lists:nthtail(4, List), L-4)].
-
+loop() ->
+    ok.
 
 main() ->
-    loop(test_data(), num(test_data())).
-
+    ok.
 
 % Read the OpCode from a list
 % Check if we need to stop (OpCode == 99) or we need to do an operation(OpCode == 1 && 2)
