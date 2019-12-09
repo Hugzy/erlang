@@ -1,11 +1,15 @@
 -module(day2).
 -export([]).
+-record(registrar,{opcode, var1, var2, storage}).
 -compile(export_all).
 
 
 op_code_add() -> 1.
 op_code_multiply() -> 2.
 op_code_exit() -> 99.
+stepper() -> 4.
+
+
 
 data() ->
     [].
@@ -30,14 +34,10 @@ multiply(Left, Right) ->
     print({atom, "Result", Result}),
     Result.
 
+
+
 test() ->
-    % Test insert functionality
-    insert(3, 13456, test_data()).
-    
-    % Test sublist functionality
-    %lists:sublist(test_data(), 3),
-    %test_data().
-    % ok.
+    ok.
 
 num(L) ->
     length([X || X <- L, X < 1]).
