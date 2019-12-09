@@ -52,21 +52,29 @@ operation(1, Registry) ->
     %insert(Reg3, Res, Data);
 operation(2, Registry) ->
     [Reg1, Reg2, Reg3] = Registry,
-    Res = multiply(Reg1, Reg2);
+    Res = multiply(Reg1, Reg2).
     %insert(Reg3, Res, Data);
-operation(99, Data)->
-    print({atom, "operation99", ""}),
-    print({list, Data}),
-    exit(ok).
-    %Data.
 
-loop(List) when is_list(List) andalso length(List) > 0  ->
+loop(List, L) when is_list(List), L > 0  ->
+    % Read OpCode
     [Op_code | Tail] = List,
+    % Cannot do this incase the next three integers do not exist because the opcode 99 was received
+    if
+        Op_code == 99 ->
+            exit("Program halt");
+        true ->
+            ok
+    end,
     Registry = lists:sublist(Tail, 3),
     operation(Op_code, Registry),
-    loop(lists:nthtail(4, List));
-loop(List) ->
-    List.
+    [loop(lists:nthtail(4, List), L-4)].
+
 
 main() ->
-    loop(test_data()).
+    loop(test_data(), num(test_data())).
+
+
+% Read the OpCode from a list
+% Check if we need to stop (OpCode == 99) or we need to do an operation(OpCode == 1 && 2)
+% Perform that given operation on var2 and var3 from the list
+% Insert the result into the list of elements
