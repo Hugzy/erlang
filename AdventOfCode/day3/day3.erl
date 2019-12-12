@@ -23,14 +23,20 @@ convert([H | T]) ->
     [{list_to_atom(Direction), Sanitizednumber}|convert(T)];
 convert(List) when length(List) == 0 -> [].
 
-calculate('R', Length, {point, X1, Y1}) ->
-    {point, X1+Length, Y1};
-calculate('L', Length, {point, X1, Y1}) ->
-    {point, X1-Length, Y1};
-calculate('U', Length, {point, X1, Y1}) ->
-    {point, X1, Y1+Length};
-calculate('D', Length, {point, X1, Y1}) ->
-    {point, X1, Y1-Length}.
+calculate('R', Length, {point, X1, Y1}) when Length > 0 ->
+    Next = {point, X1+1, Y1},
+    [Next|calculate('R', Length - 1, Next)];
+calculate('L', Length, {point, X1, Y1}) when Length > 0 ->
+    Next = {point, X1-1, Y1},
+    [Next|calculate('L', Length - 1, Next)];
+calculate('U', Length, {point, X1, Y1}) when Length > 0 ->
+    Next = {point, X1, Y1+1},
+    [Next|calculate('U', Length - 1, Next)];
+calculate('D', Length, {point, X1, Y1}) when Length > 0 ->
+    Next = {point, X1, Y1-1},
+    [Next|calculate('D', Length - 1, Next)];
+calculate(_, Length, _) when Length =< 0 ->
+    [].
 
 onLine(Line, Point) ->
     {line, {point, Lx1, Ly1}, {point, Lx2, Ly2}} = Line,
@@ -85,6 +91,10 @@ group([H|T]) when length(T) > 0 ->
 group(_) ->
     [].
 
+compare([H|T], List) ->
+    [lists:any(fun(X) -> if H == X -> true; true -> false end end, List) |compare(T, List)];
+compare(List1, _List2) when length(List1) == 0 ->
+    [].
 
 test() ->
     %List1 = convert(string:tokens(test_data_1(), ",")),
@@ -96,26 +106,34 @@ test() ->
     %Results2 = loop(List2, start()),
     %print({list, Results2}),
 
-    Results1 = loop(convert(get_data(test_data_1())), start()),
-    Results2 = loop(convert(get_data(test_data_2())), start()),
-    print({list, Results1}),
-    print({list, Results2}),
+    
+    %print({list, calculate('R', 10, {point, 0,0})}),
 
-    Lines1 = group(Results1),
-    Lines2 = group(Results2),
+    Results1 = lists:flatten(loop(convert(get_data(test_data_1())), start())),
+    Results2 = lists:flatten(loop(convert(get_data(test_data_2())), start())),
+
+    Results = [print({list, [{point, X1, Y1}, {point, X2, Y2}]}) || {point, X1, Y1} <- Results1, {point, X2, Y2} <- Results2, (X1 =:= X2) and (Y1 =:= Y2)],
+
+
+    %print({list, Results1}),
+    %print({list, Results2}),
+    print({list, Results}),
 
 
 
-    print({list, Lines1}),
-    print({list, Lines2}),
+    %Lines1 = group(Results1),
+    %Lines2 = group(Results2),
+
+%    print({list, Lines1}),
+%    print({list, Lines2}),
 
 
     ok.
 
 loop([{Direction, Length}|T], Results) ->
-    [M|U] = Results,
+    [M|_U] = lists:flatten(Results),
     % Adding newly calculated result to the list of results
-    loop(T, [calculate(Direction, Length, M) | Results]);
+    loop(T, [lists:reverse(calculate(Direction, Length, M)) | Results]);
 loop(List, Results) when length(List) == 0 ->
     Results.
 
