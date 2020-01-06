@@ -1,7 +1,5 @@
 -module(day2).
-
 -export([]).
-
 -record(registrar, {opcode, var1, var2, storage}).
 
 -compile(export_all).
@@ -26,29 +24,28 @@ data() ->
      10, 123, 2, 9, 123, 127, 2, 127, 9, 131, 1, 131, 10,
      135, 1, 135, 2, 139, 1, 10, 139, 0, 99, 2, 0, 14, 0].
 
-test_data() -> [1, 1, 1, 4, 99, 5, 6, 0, 99].
-
-    %[1,1,1,4,99].
-
-print({atom, Text, Atom}) ->
+print(Atom) when is_atom(Atom) ->
+    io:fwrite("~p \n", [Atom]);
+print(List) when is_list(List) ->
+    io:fwrite("variable: ~128p~n", [List]);
+print(Integer) when is_integer(Integer) ->
+    io:fwrite("~p \n", [Integer]).
+print(Text, Atom) when is_atom(Atom) ->
     io:fwrite("~p: ~p \n", [Text, Atom]);
-%io:format("variable: ~p", [Atom]);
-print({list, List}) ->
-    io:fwrite("list: ~w~n \n", [List]).
+print(Text, Atom) when is_integer(Atom) ->
+    io:fwrite("~p: ~p \n", [Text, Atom]);
+print(Text, List) when is_list(List) ->
+    io:fwrite("~p: ~128p~n", [Text, List]).
 
 operation(1, Left, Right) ->
     Result = Left + Right,
-    print({atom, "Result: ", Result}),
+    print("Result: ", Result),
     Result;
 operation(2, Left, Right) ->
     Result = Left * Right,
-    print({atom, "Result", Result}),
+    print("Result", Result),
     Result.
 
-test() ->
-    Filled = fill(test_data()), 
-    print({list, Filled}),
-    loop(Filled, test_data()).
 
 %extract(List) -> 
 %    fill(List).
@@ -63,7 +60,9 @@ fill([OpCode | _]) ->
 num(L) -> length([X || X <- L, X < 1]).
 
 insert(Place, Element, List) ->
-    lists:sublist(List, Place - 1) ++
+    print("storing element", Element),
+    print("in place", Place),
+    lists:sublist(List, Place) ++
       [Element] ++ lists:nthtail(Place + 1, List).
 
 create_element(0, _, Var1, Var2, Storage, Result) ->
@@ -75,32 +74,44 @@ create_element(2, OpCode, Var1, _, Storage, Result) ->
 create_element(3, OpCode, Var1, Var2, _, Result) ->
     {Result, Var1, Var2, Result}.
 
-loop([{OpCode, Var1, Var2, Storage}|T], Data) -> 
-    print({list, Data}),
+get(_, 0) ->
+    [];
+%get([H | _], _) when H == 99 ->
+%    H;
+get([H | T], Count) ->
+    print(Count),
+    [H | get(T, Count-1)].
+    
 
-    % Caclculate the reuslt
-    Result = operation(OpCode, Var1, Var2),
+loop(99, _, All_Data) ->
+    print("exit", 99),
+    All_Data;
+loop(Code, [H1, H2, H3 | T], All_Data) ->
+    print("Elements", [Code, H1, H2, H3]),
+    % Get next three elements and the opcode as input parameter
+    % If the execution gets into this function we can just perform the operation because it would have hit the exit first otherwise
+    Result = operation(Code, H1, H2),
+    New_list = insert(H3, Result, All_Data),
+    % keep looping
+    [OpCode | Tail_Without_Opcode] = T,
+    loop(OpCode, Tail_Without_Opcode, New_list).
 
-    % Calculate where we need to store the result
-    Place = round(Storage/4),
-    print({atom, "Place", Place}),
-    Spot = Storage rem 4,
-    print({atom, "Spot: ", Spot}),
-    Tuple = create_element(Spot, OpCode, Var1, Var2, Storage, Result),
-    print({atom, "Tuple", Tuple}),
-    New_list = insert(Storage, Tuple, Data),
 
-    print({list, New_list}),
+% result should be [11, 1, 1, 4, 1, 5, 6, 99]
+test_data(v1) -> [1, 1, 1, 4, 99, 5, 7, 0, 99];
+test_data(v2) -> [1,1,1,0,99].
 
-    loop(T, New_list);
-loop([_|_], Data) ->
-    print({atom, "Got here 2?", ""}),
-    Data.
+test() ->
+    %[Seed | Tail] = test_data(v2),
+    %Data = loop(Seed, Tail, test_data(v2)),
+    %print(Data),
 
-main() -> ok.
+    [Seed2 | Tail2] = test_data(v1),
+    Data2 = loop(Seed2, Tail2, test_data(v1)),
+    print(Data2),
 
-% Read the OpCode from a list
-% Check if we need to stop (OpCode == 99) or we need to do an operation(OpCode == 1 && 2)
-% Perform that given operation on var2 and var3 from the list
+    ok.
+
+main() -> fill(test_data(v2)).
 % Insert the result into the list of elements
 

@@ -25,9 +25,47 @@ has_adjacent_numbers(List, Previous) when length(List) == 0 ->
 has_adjacent_numbers([H|Number_list], Previous) ->
     has_adjacent_numbers(Number_list, H).
 
+count(Needle, Haystack) -> count(Needle, Haystack, 0).
+
+count(_, [], Count) -> Count;
+count(X, [X|Rest], Count) -> count(X, Rest, Count+1);
+count(X, [_|Rest], Count) -> count(X, Rest, Count).
+
+
+
+%has_adjacent_numbers_v2(List, _Accumulator) when length(List) == 0 ->
+%    print({list, _Accumulator}),
+%    true;
+%has_adjacent_numbers_v2([H|T], Accumulator) when length(Accumulator) >= 3 ->
+%    print({list, Accumulator}),
+%    false;
+%has_adjacent_numbers_v2([H|T], Accumulator) when length(Accumulator) == 0 ->
+%    has_adjacent_numbers_v2(T, [H]);
+%has_adjacent_numbers_v2([H|T], Accumulator) ->
+%    [A|_B] = Accumulator,
+%    if
+%        H == A ->
+%            has_adjacent_numbers_v2(T, [H|Accumulator]);
+%        true ->
+%            has_adjacent_numbers_v2(T, [])
+%        end.
+
+has_adjacent_numbers_v2(_, _, Previous_count) when Previous_count == 2 ->
+    true;
+has_adjacent_numbers_v2(Needles, Haystack, _) when length(Needles) == 0 ->
+    false;
+has_adjacent_numbers_v2(Needles, Haystack, _) ->
+    [H|T] = Needles,
+    has_adjacent_numbers_v2(T, Haystack, count(H, Haystack)).
+
 meets_criteria(Number) ->
     Number_list = convert_number_to_list(Number),
     has_adjacent_numbers(Number_list, -1) and does_not_decrease(Number_list , -1).
+
+meets_criteria_v2(Number) ->
+    Number_list = convert_number_to_list(Number),
+    has_adjacent_numbers_v2(Number_list, Number_list, 0) and does_not_decrease(Number_list , 0).
+
 
 loop([H | Sequence]) ->
     Meets_criteria = meets_criteria(H),
@@ -38,6 +76,17 @@ loop([H | Sequence]) ->
             loop(Sequence)
         end;
 loop(List) when length(List) == 0 ->
+    [].
+
+loop_v2([H | Sequence]) ->
+    Meets_criteria = meets_criteria_v2(H),
+    if 
+        Meets_criteria ->
+            [H|loop_v2(Sequence)];
+        true ->
+            loop_v2(Sequence)
+        end;
+loop_v2(List) when length(List) == 0 ->
     [].
 
 test() ->
@@ -52,8 +101,24 @@ test() ->
     true = meets_criteria(111111),
     false = meets_criteria(223450),
     false = meets_criteria(123789),
+    ok.
 
+test_v2() ->
+
+    true = does_not_decrease(convert_number_to_list(112233),-1),
+    true = does_not_decrease(convert_number_to_list(123444),-1),
+    true = does_not_decrease(convert_number_to_list(111122),-1),
+
+    Haystack_1 = convert_number_to_list(112233),
+    true = has_adjacent_numbers_v2(Haystack_1, Haystack_1,[]),
+    Haystack_2 = convert_number_to_list(123444),
+    false = has_adjacent_numbers_v2(Haystack_2, Haystack_2,[]),
+    Haystack_3 = convert_number_to_list(111122),
+    true = has_adjacent_numbers_v2(Haystack_3, Haystack_3,[]),
     ok.
 
 main() ->
     length(loop(lists:seq(256310, 732736, 1))).
+
+main_v2() ->
+    length(loop_v2(lists:seq(256310, 732736, 1))).

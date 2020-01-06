@@ -18,8 +18,7 @@ test_data_1() ->
 test_data_2() ->
     "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7".
 
-get_data(Data) -> string:tokens(Data, ",").
-
+split(Data) -> string:tokens(Data, ",").
 
 print({atom, Text, Atom}) ->
     io:fwrite("~p: ~p \n", [Text, Atom]);
@@ -29,8 +28,7 @@ print({list, List}) ->
 convert([H | T]) ->
     {Direction, Number} = string:take(H, [$R, $L, $U, $D]),
     {Sanitizednumber, _} = string:to_integer(Number),
-    [{list_to_atom(Direction), Sanitizednumber}
-     | convert(T)];
+    [{list_to_atom(Direction), Sanitizednumber} | convert(T)];
 convert(List) when length(List) == 0 -> [].
 
 calculate('R', Length, {point, X1, Y1, StepsTaken})
@@ -58,63 +56,37 @@ manhatten_distance([H | T]) ->
     [Distance | manhatten_distance(T)];
 manhatten_distance(List) when length(List) == 0 -> [].
 
-test() ->
-    erlang:display("doing first dataset"),
-    Results1 = lists:flatten(loop(convert(get_data(test_data_1())),start())),
-    erlang:display("doing second dataset"),
-    Results2 = lists:flatten(loop(convert(get_data(test_data_2())),start())),
-
-    % Clever way to remove the first element 
-    erlang:display("Getting intersecting elements and reversing list"),
-    [_ | Results] = lists:reverse([{point, X1, Y1, StepsTaken1 + StepsTaken2} || {point, X1, Y1, StepsTaken1} <- Results1, {point, X2, Y2, StepsTaken2} <- Results2, (X1 =:= X2) and (Y1 =:= Y2)]),
-    erlang:display("calculating manhatten distance"),
-    Distance = manhatten_distance(Results),
-    print({list, Results}),
-    Manhatten_distance =  lists:min(Distance),
-    Minimum_steps_taken = lists:min(lists:map(fun(P) -> 
-        {point, _X, _Y, StepsTaken} = P,
-        StepsTaken
-    end, Results)),
-    print({atom, "The manhatten distance", Manhatten_distance}),
-    print({atom, "The minimum steps required to get to the first intersection for both sets of data", Minimum_steps_taken}),
-    %Lines1 = group(Results1),
-    %Lines2 = group(Results2),
-    %    print({list, Lines1}),
-    %    print({list, Lines2}),
-    ok.
-
 loop([{Direction, Length} | T], Results) ->
     [M | _U] = lists:flatten(Results),
     % Adding newly calculated result to the list of results
-    loop(T,
-	 [lists:reverse(calculate(Direction, Length, M))
-	  | Results]);
+    loop(T, [lists:reverse(calculate(Direction, Length, M)) | Results]);
 loop(List, Results) when length(List) == 0 -> Results.
 
-main() -> 
+get_intersections(Results1, Results2) ->
+    lists:reverse([{point, X1, Y1, StepsTaken1 + StepsTaken2} || {point, X1, Y1, StepsTaken1} <- Results1, {point, X2, Y2, StepsTaken2} <- Results2, (X1 =:= X2) and (Y1 =:= Y2)]).
+
+day3(Data1, Data2) ->
     erlang:display("doing first dataset"),
-    Results1 = lists:flatten(loop(convert(get_data(data_1())),start())),
+    Results1 = lists:flatten(loop(convert(split(Data1)),start())),
     erlang:display("doing second dataset"),
-    Results2 = lists:flatten(loop(convert(get_data(data_2())),start())),
+    Results2 = lists:flatten(loop(convert(split(Data2)),start())),
 
     % Clever way to remove the first element 
-    erlang:display("Getting intersecting elements and reversing list"),
-    [_ | Results] = lists:reverse([{point, X1, Y1, StepsTaken1 + StepsTaken2} || {point, X1, Y1, StepsTaken1} <- Results1, {point, X2, Y2, StepsTaken2} <- Results2, (X1 =:= X2) and (Y1 =:= Y2)]),
-    erlang:display("calculating manhatten distance"),
+    [_ | Results] = get_intersections(Results1, Results2),
     Distance = manhatten_distance(Results),
-    print({list, Results}),
     Manhatten_distance =  lists:min(Distance),
     Minimum_steps_taken = lists:min(lists:map(fun(P) -> 
         {point, _X, _Y, StepsTaken} = P,
         StepsTaken
     end, Results)),
-    print({atom, "The manhatten distance", Manhatten_distance}),
-    print({atom, "The minimum steps required to get to the first intersection for both sets of data", Minimum_steps_taken}),
-    %Lines1 = group(Results1),
-    %Lines2 = group(Results2),
-    %    print({list, Lines1}),
-    %    print({list, Lines2}),
-    ok.
+    {result, {manhatten_distance, Manhatten_distance}, {steps_to_intersection, Minimum_steps_taken}}.
+
+test() ->
+    % Results for this should be manhatten_distance = 135, steps_to_intersection = 410
+    day3(test_data_1(), test_data_2()).
+
+main() -> 
+    day3(data_1(), data_2()).
     
 % Map the data to a tuple of direction and length
 % Recursively step through the lists of directions and compute the next location for the two heads
