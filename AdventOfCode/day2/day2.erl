@@ -1,5 +1,7 @@
 -module(day2).
+
 -export([]).
+
 -record(registrar, {opcode, var1, var2, storage}).
 
 -compile(export_all).
@@ -13,7 +15,7 @@ op_code_exit() -> 99.
 stepper() -> 4.
 
 data() ->
-    [1, 0, 0, 3, 1, 1, 2, 3, 1, 3, 4, 3, 1, 5, 0, 3, 2, 10,
+    [1, 12, 2, 3, 1, 1, 2, 3, 1, 3, 4, 3, 1, 5, 0, 3, 2, 10,
      1, 19, 1, 5, 19, 23, 1, 23, 5, 27, 1, 27, 13, 31, 1, 31,
      5, 35, 1, 9, 35, 39, 2, 13, 39, 43, 1, 43, 10, 47, 1,
      47, 13, 51, 2, 10, 51, 55, 1, 55, 5, 59, 1, 59, 5, 63,
@@ -30,6 +32,7 @@ print(List) when is_list(List) ->
     io:fwrite("variable: ~128p~n", [List]);
 print(Integer) when is_integer(Integer) ->
     io:fwrite("~p \n", [Integer]).
+
 print(Text, Atom) when is_atom(Atom) ->
     io:fwrite("~p: ~p \n", [Text, Atom]);
 print(Text, Atom) when is_integer(Atom) ->
@@ -42,28 +45,24 @@ operation(1, Left, Right) ->
     print("Result: ", Result),
     Result;
 operation(2, Left, Right) ->
-    Result = Left * Right,
-    print("Result", Result),
-    Result.
+    Result = Left * Right, print("Result", Result), Result.
 
-
-%extract(List) -> 
+%extract(List) ->
 %    fill(List).
 
 fill([Var1, Var2, Var3, Var4 | T]) ->
-    Tuple = {Var1, Var2, Var3, Var4},
-    [Tuple | fill(T)];
-fill([OpCode | _]) -> 
-    Tuple = {OpCode},
-    [Tuple].
+    Tuple = {Var1, Var2, Var3, Var4}, [Tuple | fill(T)];
+fill([OpCode | _]) -> Tuple = {OpCode}, [Tuple].
 
 num(L) -> length([X || X <- L, X < 1]).
 
 insert(Place, Element, List) ->
     print("storing element", Element),
     print("in place", Place),
-    lists:sublist(List, Place) ++
-      [Element] ++ lists:nthtail(Place + 1, List).
+    Return = lists:sublist(List, Place) ++
+	       [Element] ++ lists:nthtail(Place + 1, List),
+    print("New list now looks", Return),
+    Return.
 
 create_element(0, _, Var1, Var2, Storage, Result) ->
     {Result, Var1, Var2, Storage};
@@ -74,44 +73,67 @@ create_element(2, OpCode, Var1, _, Storage, Result) ->
 create_element(3, OpCode, Var1, Var2, _, Result) ->
     {Result, Var1, Var2, Result}.
 
-get(_, 0) ->
-    [];
+get(_, 0) -> [];
 %get([H | _], _) when H == 99 ->
 %    H;
 get([H | T], Count) ->
-    print(Count),
-    [H | get(T, Count-1)].
-    
+    print(Count), [H | get(T, Count - 1)].
 
-loop(99, _, All_Data) ->
-    print("exit", 99),
-    All_Data;
-loop(Code, [H1, H2, H3 | T], All_Data) ->
-    print("Elements", [Code, H1, H2, H3]),
+get_as(variables, List, Iteration) ->
+    Start = Iteration * 4 + 2,
+    lists:sublist(List, Start, 3);
+get_as(op_code, List, Iteration) ->
+    Start = Iteration * 4 + 1,
+    lists:sublist(List, Start, 1).
+
+loop(99, Data, _) -> print("exit", 99), Data;
+loop(Code, List, Iteration) ->
+    print("List is", List),
+    [Index1, Index2, Storing_position] = get_as(variables, List, Iteration),
+    print("Elements", [Code, Index1, Index2, Storing_position]),
     % Get next three elements and the opcode as input parameter
     % If the execution gets into this function we can just perform the operation because it would have hit the exit first otherwise
-    Result = operation(Code, H1, H2),
-    New_list = insert(H3, Result, All_Data),
-    % keep looping
-    [OpCode | Tail_Without_Opcode] = T,
-    loop(OpCode, Tail_Without_Opcode, New_list).
 
+    % Adding 1 to the index because some retard made lists:nth not 0 index based.
+    Value1 = lists:nth(Index1+1, List),
+    Value2 = lists:nth(Index2+1, List),
+    Result = operation(Code, Value1, Value2),
+    New_list = insert(Storing_position, Result, List),
+    print("List right after intertion", New_list),
+    [OpCode | _] = get_as(op_code, New_list, Iteration + 1),
+    print("Next opcode", OpCode),
+    % There is a problem because only the resulting list is updated and not the executing list
+    loop(OpCode, New_list, Iteration + 1).
 
-% result should be [11, 1, 1, 4, 1, 5, 6, 99]
-test_data(v1) -> [1, 1, 1, 4, 99, 5, 7, 0, 99];
-test_data(v2) -> [1,1,1,0,99].
+% result should [35, 1, 1, 4, 2, 5, 7, 0, 99]
+test_data(v1) -> [1,0,0,0,99];
+test_data(v2) -> [2,3,0,3,99];
+test_data(v3) -> [2,4,4,5,99,0];
+test_data(v4) -> [1,1,1,4,99,5,6,0,99].
 
 test() ->
     %[Seed | Tail] = test_data(v2),
     %Data = loop(Seed, Tail, test_data(v2)),
     %print(Data),
+    Start = 0,
 
-    [Seed2 | Tail2] = test_data(v1),
-    Data2 = loop(Seed2, Tail2, test_data(v1)),
-    print(Data2),
+    [OpCode1 | _] = get_as(op_code, test_data(v1), Start),
+    [2,0,0,0,99] = loop(OpCode1, test_data(v1), Start),
+    
+    [OpCode2 | _] = get_as(op_code, test_data(v2), Start),
+    [2,3,0,6,99] = loop(OpCode2, test_data(v2), Start),
+    
+    [OpCode3 | _] = get_as(op_code, test_data(v3), Start),
+    [2,4,4,5,99,9801] = loop(OpCode3, test_data(v3), Start),
+    
+    [OpCode4 | _] = get_as(op_code, test_data(v4), Start),
+    [30,1,1,4,2,5,6,0,99] = loop(OpCode4, test_data(v4), Start),
 
     ok.
 
-main() -> fill(test_data(v2)).
-% Insert the result into the list of elements
+main() ->
+    Start = 0,
+    [OpCode | _] = get_as(op_code, data(), Start),
+    Data2 = loop(OpCode, data(), Start),
+    print(Data2).% Insert the result into the list of elements
 
