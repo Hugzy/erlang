@@ -6,14 +6,6 @@
 
 -compile(export_all).
 
-op_code_add() -> 1.
-
-op_code_multiply() -> 2.
-
-op_code_exit() -> 99.
-
-stepper() -> 4.
-
 data() ->
     [1, 12, 2, 3, 1, 1, 2, 3, 1, 3, 4, 3, 1, 5, 0, 3, 2, 10,
      1, 19, 1, 5, 19, 23, 1, 23, 5, 27, 1, 27, 13, 31, 1, 31,
@@ -32,7 +24,6 @@ print(List) when is_list(List) ->
     io:fwrite("variable: ~128p~n", [List]);
 print(Integer) when is_integer(Integer) ->
     io:fwrite("~p \n", [Integer]).
-
 print(Text, Atom) when is_atom(Atom) ->
     io:fwrite("~p: ~p \n", [Text, Atom]);
 print(Text, Atom) when is_integer(Atom) ->
@@ -41,43 +32,13 @@ print(Text, List) when is_list(List) ->
     io:fwrite("~p: ~128p~n", [Text, List]).
 
 operation(1, Left, Right) ->
-    Result = Left + Right,
-    print("Result: ", Result),
-    Result;
+    Left + Right;
 operation(2, Left, Right) ->
-    Result = Left * Right, print("Result", Result), Result.
-
-%extract(List) ->
-%    fill(List).
-
-fill([Var1, Var2, Var3, Var4 | T]) ->
-    Tuple = {Var1, Var2, Var3, Var4}, [Tuple | fill(T)];
-fill([OpCode | _]) -> Tuple = {OpCode}, [Tuple].
-
-num(L) -> length([X || X <- L, X < 1]).
+    Left * Right.
 
 insert(Place, Element, List) ->
-    print("storing element", Element),
-    print("in place", Place),
-    Return = lists:sublist(List, Place) ++
-	       [Element] ++ lists:nthtail(Place + 1, List),
-    print("New list now looks", Return),
-    Return.
-
-create_element(0, _, Var1, Var2, Storage, Result) ->
-    {Result, Var1, Var2, Storage};
-create_element(1, OpCode, _, Var2, Storage, Result) ->
-    {Result, Result, Var2, Storage};
-create_element(2, OpCode, Var1, _, Storage, Result) ->
-    {Result, Var1, Result, Storage};
-create_element(3, OpCode, Var1, Var2, _, Result) ->
-    {Result, Var1, Var2, Result}.
-
-get(_, 0) -> [];
-%get([H | _], _) when H == 99 ->
-%    H;
-get([H | T], Count) ->
-    print(Count), [H | get(T, Count - 1)].
+    lists:sublist(List, Place) ++
+	       [Element] ++ lists:nthtail(Place + 1, List).
 
 get_as(variables, List, Iteration) ->
     Start = Iteration * 4 + 2,
@@ -86,22 +47,19 @@ get_as(op_code, List, Iteration) ->
     Start = Iteration * 4 + 1,
     lists:sublist(List, Start, 1).
 
-loop(99, Data, _) -> print("exit", 99), Data;
+loop(99, Data, _) -> 
+    print("exit", 99), 
+    Data;
 loop(Code, List, Iteration) ->
-    print("List is", List),
     [Index1, Index2, Storing_position] = get_as(variables, List, Iteration),
-    print("Elements", [Code, Index1, Index2, Storing_position]),
     % Get next three elements and the opcode as input parameter
     % If the execution gets into this function we can just perform the operation because it would have hit the exit first otherwise
-
     % Adding 1 to the index because some retard made lists:nth not 0 index based.
     Value1 = lists:nth(Index1+1, List),
     Value2 = lists:nth(Index2+1, List),
     Result = operation(Code, Value1, Value2),
     New_list = insert(Storing_position, Result, List),
-    print("List right after intertion", New_list),
     [OpCode | _] = get_as(op_code, New_list, Iteration + 1),
-    print("Next opcode", OpCode),
     % There is a problem because only the resulting list is updated and not the executing list
     loop(OpCode, New_list, Iteration + 1).
 
