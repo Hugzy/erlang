@@ -1,9 +1,5 @@
 -module(day2).
-
 -export([]).
-
--record(registrar, {opcode, var1, var2, storage}).
-
 -compile(export_all).
 
 data() ->
@@ -48,7 +44,7 @@ get_as(op_code, List, Iteration) ->
     lists:sublist(List, Start, 1).
 
 loop(99, Data, _) -> 
-    print("exit", 99), 
+    %print("exit", 99), 
     Data;
 loop(Code, List, Iteration) ->
     [Index1, Index2, Storing_position] = get_as(variables, List, Iteration),
@@ -63,16 +59,34 @@ loop(Code, List, Iteration) ->
     % There is a problem because only the resulting list is updated and not the executing list
     loop(OpCode, New_list, Iteration + 1).
 
-% result should [35, 1, 1, 4, 2, 5, 7, 0, 99]
+for(0, _, _) -> 
+   [];
+for(N,Term, Fun) when N > 0 -> 
+    Fun(N),
+    [Term|for(N-1,Term, Fun)]. 
+
+noun(Iter, Data) ->
+    for(Iter,0, fun(N) -> verb(Iter, N, Data) end),
+    ok.
+verb(Iter, OuterCycle, Data) ->
+    for(Iter,0, fun(InnerCycle) -> 
+        %print("Loop Cycle:", [OuterCycle, InnerCycle]),
+        Start = 0,
+        NewData = insert(2, OuterCycle, (insert(1, InnerCycle, Data))),
+        %print("NewData", NewData),
+        [OpCode | _] = get_as(op_code, NewData, Start),
+        Data2 = loop(OpCode, NewData, Start),
+        [H, Noun, Verb | T] = Data2,
+        output_result(H, Noun, Verb, T)
+     end),
+    ok.
+
 test_data(v1) -> [1,0,0,0,99];
 test_data(v2) -> [2,3,0,3,99];
 test_data(v3) -> [2,4,4,5,99,0];
 test_data(v4) -> [1,1,1,4,99,5,6,0,99].
 
 test() ->
-    %[Seed | Tail] = test_data(v2),
-    %Data = loop(Seed, Tail, test_data(v2)),
-    %print(Data),
     Start = 0,
 
     [OpCode1 | _] = get_as(op_code, test_data(v1), Start),
@@ -86,12 +100,30 @@ test() ->
     
     [OpCode4 | _] = get_as(op_code, test_data(v4), Start),
     [30,1,1,4,2,5,6,0,99] = loop(OpCode4, test_data(v4), Start),
-
     ok.
 
-main() ->
+test2() ->
+    print("hello?"),
+    noun(2, test_data(v1)).
+
+main1() ->
     Start = 0,
     [OpCode | _] = get_as(op_code, data(), Start),
     Data2 = loop(OpCode, data(), Start),
     print(Data2).% Insert the result into the list of elements
 
+output_result(19690720, Noun, Verb, Rest) ->
+    print("Result: ", 19690720),
+    shell:strings(false),
+    print("Noun, Verb", [Noun, Verb]),
+    shell:strings(true),
+    print("Final result: ", (100*Noun+Verb));
+output_result(3562624, Noun, Verb, Rest) ->
+    print("Result", 3562624),
+    print("Final result: ", (100*Noun+Verb)),
+    print(Rest);
+output_result(_,_,_,_) ->
+    nothing.
+
+main2() ->
+    noun(99, data()).

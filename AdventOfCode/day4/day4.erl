@@ -31,25 +31,6 @@ count(_, [], Count) -> Count;
 count(X, [X|Rest], Count) -> count(X, Rest, Count+1);
 count(X, [_|Rest], Count) -> count(X, Rest, Count).
 
-
-
-%has_adjacent_numbers_v2(List, _Accumulator) when length(List) == 0 ->
-%    print({list, _Accumulator}),
-%    true;
-%has_adjacent_numbers_v2([H|T], Accumulator) when length(Accumulator) >= 3 ->
-%    print({list, Accumulator}),
-%    false;
-%has_adjacent_numbers_v2([H|T], Accumulator) when length(Accumulator) == 0 ->
-%    has_adjacent_numbers_v2(T, [H]);
-%has_adjacent_numbers_v2([H|T], Accumulator) ->
-%    [A|_B] = Accumulator,
-%    if
-%        H == A ->
-%            has_adjacent_numbers_v2(T, [H|Accumulator]);
-%        true ->
-%            has_adjacent_numbers_v2(T, [])
-%        end.
-
 has_adjacent_numbers_v2(_, _, Previous_count) when Previous_count == 2 ->
     true;
 has_adjacent_numbers_v2(Needles, Haystack, _) when length(Needles) == 0 ->
