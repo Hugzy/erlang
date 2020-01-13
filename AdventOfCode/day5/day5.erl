@@ -27,10 +27,18 @@ print(Text, Atom) when is_integer(Atom) ->
 print(Text, List) when is_list(List) ->
     io:fwrite("~p: ~128p~n", [Text, List]).
 
+% Adds two inputs
 operation(1, Left, Right) ->
     Left + Right;
+% Multiplies two integers
 operation(2, Left, Right) ->
-    Left * Right.
+    Left * Right;
+% outputs the value of its only parameter
+operation(4, Input, List) ->
+    not_implemented.
+% takes a single integer as input and saves it to the position given by its only parameter
+operation(3, Input, Position, List) ->
+    not_implemented.
 
 insert(Place, Element, List) ->
     lists:sublist(List, Place) ++
