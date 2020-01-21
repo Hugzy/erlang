@@ -1,4 +1,4 @@
--module(day2).
+-module(day5).
 -export([]).
 -compile(export_all).
 
@@ -15,17 +15,23 @@ data() ->
      135, 1, 135, 2, 139, 1, 10, 139, 0, 99, 2, 0, 14, 0].
 
 print(Atom) when is_atom(Atom) ->
-    io:fwrite("~p \n", [Atom]);
+    io:fwrite("~p \n", [Atom]),
+    Atom;
 print(List) when is_list(List) ->
-    io:fwrite("variable: ~128p~n", [List]);
+    io:fwrite("variable: ~128p~n", [List]),
+    List;
 print(Integer) when is_integer(Integer) ->
-    io:fwrite("~p \n", [Integer]).
+    io:fwrite("~p \n", [Integer]),
+    Integer.
 print(Text, Atom) when is_atom(Atom) ->
-    io:fwrite("~p: ~p \n", [Text, Atom]);
+    io:fwrite("~p: ~p \n", [Text, Atom]),
+    Atom;
 print(Text, Atom) when is_integer(Atom) ->
-    io:fwrite("~p: ~p \n", [Text, Atom]);
+    io:fwrite("~p: ~p \n", [Text, Atom]),
+    Atom;
 print(Text, List) when is_list(List) ->
-    io:fwrite("~p: ~128p~n", [Text, List]).
+    io:fwrite("~p: ~128p~n", [Text, List]),
+    List.
 
 % Adds two inputs
 operation(1, Left, Right) ->
@@ -51,10 +57,62 @@ get_as(op_code, List, Iteration) ->
     Start = Iteration * 4 + 1,
     lists:sublist(List, Start, 1).
 
+padding(Integer) when Integer div 10000 == 1 ->
+    "";
+padding(Integer) when Integer div 1000 == 1 ->
+    "0";
+padding(Integer) when Integer div 100 == 1 ->
+    "00";
+padding(Integer) when Integer div 10 == 1 ->
+    "000";
+padding(Integer) when Integer div 1 >= 1 ->
+    "0000".
+
+
+convert_int_to_opcodelist(Integer) when Integer div 10000 == 1 ->
+    print("divisible by 10000", Integer),
+    Stringed = integer_to_list(Integer),
+    [First, Second | Rest] = lists:reverse([list_to_integer([Char]) || Char <- Stringed]),
+    % Because the list was reversed beforehand the opcode is now in reverse order, thus we concat second onto first
+    Code = [list_to_integer(string:concat(integer_to_list(Second), integer_to_list(First)))],
+    Code ++ Rest;
+convert_int_to_opcodelist(Integer) when Integer div 1000 == 1 ->
+    print("divisible by 1000", Integer),
+    Stringed = string:concat("0", integer_to_list(Integer)),
+    [First, Second | Rest] = lists:reverse([list_to_integer([Char]) || Char <- Stringed]),
+    % Because the list was reversed beforehand the opcode is now in reverse order, thus we concat second onto first
+    Code = [list_to_integer(string:concat(integer_to_list(Second), integer_to_list(First)))],
+    Code ++ Rest;
+convert_int_to_opcodelist(Integer) when Integer div 100 == 1 ->
+    print("divisible by 100", Integer),
+    Stringed = string:concat("00", integer_to_list(Integer)),
+    Intermediary = [list_to_integer([Char]) || Char <- Stringed],
+    [First, Second | Rest] = lists:reverse(Intermediary),
+    % Because the list was reversed beforehand the opcode is now in reverse order, thus we concat second onto first
+    Code = [list_to_integer(string:concat(integer_to_list(Second), integer_to_list(First)))],
+    Code ++ Rest;
+convert_int_to_opcodelist(Integer) when Integer div 10 == 1 ->
+    print("divisible by 10", Integer),
+    Stringed = string:concat("000", integer_to_list(Integer)),
+    [First, Second | Rest] = lists:reverse([list_to_integer([Char]) || Char <- Stringed]),
+    % Because the list was reversed beforehand the opcode is now in reverse order, thus we concat second onto first 
+    Code = [list_to_integer(string:concat(integer_to_list(Second), integer_to_list(First)))],
+    Code ++ Rest;
+convert_int_to_opcodelist(Integer) when Integer div 1 >= 1 ->
+    print("divisible by 1", Integer),
+    Stringed = string:concat("0000", integer_to_list(Integer)),
+    Intermediary = [list_to_integer([Char]) || Char <- Stringed],
+    [First, Second | Rest] = lists:reverse(Intermediary),
+    % Because the list was reversed beforehand the opcode is now in reverse order, thus we concat second onto first 
+    Code = [list_to_integer(string:concat(integer_to_list(Second), integer_to_list(First)))],
+    Code ++ Rest.
+
 loop(99, Data, _) -> 
-    %print("exit", 99), 
     Data;
 loop(Code, List, Iteration) ->
+    CodeList = convert_int_to_opcodelist(Code),
+    print("CodeList", CodeList),
+
     [Index1, Index2, Storing_position] = get_as(variables, List, Iteration),
     % Get next three elements and the opcode as input parameter
     % If the execution gets into this function we can just perform the operation because it would have hit the exit first otherwise
@@ -89,32 +147,37 @@ verb(Iter, OuterCycle, Data) ->
      end),
     ok.
 
-test_data(v1) -> [1,0,0,0,99];
-test_data(v2) -> [2,3,0,3,99];
-test_data(v3) -> [2,4,4,5,99,0];
-test_data(v4) -> [1,1,1,4,99,5,6,0,99].
+test_data(v1) -> [1002,4,3,4].
+
+boot_strap(Data) ->
+    Start = 0,
+    [OpCode | _] = get_as(op_code, Data, Start),
+    print("opcode", OpCode),
+    loop(OpCode, Data, Start).
+
+
+test_int_to_opcodelist() ->
+    I1 = 02,
+    I10 = 11,
+    I100 = 102,
+    I1000 = 1002,
+    I10000 = 10002,
+
+    [02, 0, 0, 0] = print("I1", convert_int_to_opcodelist(I1)),
+    [11, 0, 0, 0] = print("I10", convert_int_to_opcodelist(I10)),
+    [02, 1, 0, 0] = print("I100", convert_int_to_opcodelist(I100)),
+    [02, 0, 1, 0] = print("I1000", convert_int_to_opcodelist(I1000)),
+    [02, 0, 0, 1] = print("I10000", convert_int_to_opcodelist(I10000)),
+    ok.
+
 
 test() ->
-    Start = 0,
-
-    [OpCode1 | _] = get_as(op_code, test_data(v1), Start),
-    [2,0,0,0,99] = loop(OpCode1, test_data(v1), Start),
-    
-    [OpCode2 | _] = get_as(op_code, test_data(v2), Start),
-    [2,3,0,6,99] = loop(OpCode2, test_data(v2), Start),
-    
-    [OpCode3 | _] = get_as(op_code, test_data(v3), Start),
-    [2,4,4,5,99,9801] = loop(OpCode3, test_data(v3), Start),
-    
-    [OpCode4 | _] = get_as(op_code, test_data(v4), Start),
-    [30,1,1,4,2,5,6,0,99] = loop(OpCode4, test_data(v4), Start),
+    test_int_to_opcodelist(),
     ok.
 
 main1() ->
-    Start = 0,
-    [OpCode | _] = get_as(op_code, data(), Start),
-    Data2 = loop(OpCode, data(), Start),
-    print(Data2).% Insert the result into the list of elements
+    Data = boot_strap(data()),
+    print(Data).% Insert the result into the list of elements
 
 output_result(19690720, Noun, Verb, Rest) ->
     print("Result: ", 19690720),
