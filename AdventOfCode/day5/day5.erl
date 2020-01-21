@@ -69,38 +69,9 @@ padding(Integer) when Integer div 1 >= 1 ->
     "0000".
 
 
-convert_int_to_opcodelist(Integer) when Integer div 10000 == 1 ->
-    print("divisible by 10000", Integer),
-    Stringed = integer_to_list(Integer),
-    [First, Second | Rest] = lists:reverse([list_to_integer([Char]) || Char <- Stringed]),
-    % Because the list was reversed beforehand the opcode is now in reverse order, thus we concat second onto first
-    Code = [list_to_integer(string:concat(integer_to_list(Second), integer_to_list(First)))],
-    Code ++ Rest;
-convert_int_to_opcodelist(Integer) when Integer div 1000 == 1 ->
-    print("divisible by 1000", Integer),
-    Stringed = string:concat("0", integer_to_list(Integer)),
-    [First, Second | Rest] = lists:reverse([list_to_integer([Char]) || Char <- Stringed]),
-    % Because the list was reversed beforehand the opcode is now in reverse order, thus we concat second onto first
-    Code = [list_to_integer(string:concat(integer_to_list(Second), integer_to_list(First)))],
-    Code ++ Rest;
-convert_int_to_opcodelist(Integer) when Integer div 100 == 1 ->
-    print("divisible by 100", Integer),
-    Stringed = string:concat("00", integer_to_list(Integer)),
-    Intermediary = [list_to_integer([Char]) || Char <- Stringed],
-    [First, Second | Rest] = lists:reverse(Intermediary),
-    % Because the list was reversed beforehand the opcode is now in reverse order, thus we concat second onto first
-    Code = [list_to_integer(string:concat(integer_to_list(Second), integer_to_list(First)))],
-    Code ++ Rest;
-convert_int_to_opcodelist(Integer) when Integer div 10 == 1 ->
-    print("divisible by 10", Integer),
-    Stringed = string:concat("000", integer_to_list(Integer)),
-    [First, Second | Rest] = lists:reverse([list_to_integer([Char]) || Char <- Stringed]),
-    % Because the list was reversed beforehand the opcode is now in reverse order, thus we concat second onto first 
-    Code = [list_to_integer(string:concat(integer_to_list(Second), integer_to_list(First)))],
-    Code ++ Rest;
-convert_int_to_opcodelist(Integer) when Integer div 1 >= 1 ->
+convert_int_to_opcodelist(Integer) ->
     print("divisible by 1", Integer),
-    Stringed = string:concat("0000", integer_to_list(Integer)),
+    Stringed = string:concat(padding(Integer), integer_to_list(Integer)),
     Intermediary = [list_to_integer([Char]) || Char <- Stringed],
     [First, Second | Rest] = lists:reverse(Intermediary),
     % Because the list was reversed beforehand the opcode is now in reverse order, thus we concat second onto first 
