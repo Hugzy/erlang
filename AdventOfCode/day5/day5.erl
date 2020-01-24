@@ -163,16 +163,16 @@ test_execution_data() -> [
 test_execution_results() ->
     [].
 
-test_executions([H|T]) ->
-    execute(H),
-    test_executions(T);
-test_executions(_) ->
+test_executions([Actual|T], [Expected|T2]) ->
+    Expected = execute(Actual),
+    test_executions(T, T2);
+test_executions(_, _) ->
     ok.
 
 test() ->
     ok = test_int_to_opcodelist(),
     ok = test_operations(),
-    ok = test_executions(test_execution_data()),
+    ok = test_executions(test_execution_data(), test_execution_results()),
     ok.
 
 main1() ->
