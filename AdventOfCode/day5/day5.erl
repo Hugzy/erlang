@@ -173,6 +173,3 @@ output_result(3562624, Noun, Verb, Rest) ->
     print(Rest);
 output_result(_,_,_,_) ->
     nothing.
-
-main2() ->
-    noun(99, data()).
