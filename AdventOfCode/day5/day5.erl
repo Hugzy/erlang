@@ -34,26 +34,26 @@ print(Text, List) when is_list(List) ->
     List.
 
 % Adds two inputs
-operation(1, Left, Right) ->
+operation(1, {Left, Right}) ->
     Left + Right;
 % Multiplies two integers
-operation(2, Left, Right) ->
+operation(2, {Left, Right}) ->
     Left * Right;
+% takes a single integer as input and overrides it to the position given by its only parameter
+operation(3, {Input, Position, List}) ->
+    insert(Position, Input, List);
 % outputs the value of its only parameter
-operation(4, Input, List) ->
-    not_implemented.
-% takes a single integer as input and saves it to the position given by its only parameter
-operation(3, Input, Position, List) ->
-    not_implemented.
+operation(4, {Input}) ->
+    print("Parameter: ", Input).
 
 insert(Place, Element, List) ->
     lists:sublist(List, Place) ++
 	       [Element] ++ lists:nthtail(Place + 1, List).
 
-get_as(variables, List, Iteration) ->
+get(variables, List, Iteration) ->
     Start = Iteration * 4 + 2,
     lists:sublist(List, Start, 3);
-get_as(op_code, List, Iteration) ->
+get(op_code, List, Iteration) ->
     Start = Iteration * 4 + 1,
     lists:sublist(List, Start, 1).
 
@@ -68,7 +68,6 @@ padding(Integer) when Integer div 10 == 1 ->
 padding(Integer) when Integer div 1 >= 1 ->
     "0000".
 
-
 convert_int_to_opcodelist(Integer) ->
     print("divisible by 1", Integer),
     Stringed = string:concat(padding(Integer), integer_to_list(Integer)),
@@ -78,22 +77,38 @@ convert_int_to_opcodelist(Integer) ->
     Code = [list_to_integer(string:concat(integer_to_list(Second), integer_to_list(First)))],
     Code ++ Rest.
 
+execute([OpCode, 0, 0, 0]) -> 
+    not_implemented;
+execute([OpCode, 1, 0, 0]) -> 
+    not_implemented;
+execute([OpCode, 0, 1, 0]) -> 
+    not_implemented;
+execute([OpCode, 0, 0, 1]) -> 
+    not_implemented;
+execute([OpCode, 1, 1, 0]) -> 
+    not_implemented;
+execute([OpCode, 0, 1, 1]) -> 
+    not_implemented;
+execute([OpCode, 1, 0, 1]) -> 
+    not_implemented;
+execute([OpCode, 1, 1, 1]) -> 
+    not_implemented.
+
+
 loop(99, Data, _) -> 
     Data;
-loop(Code, List, Iteration) ->
+loop(Code, List, Iteration) -> 
     CodeList = convert_int_to_opcodelist(Code),
     print("CodeList", CodeList),
-
-    [Index1, Index2, Storing_position] = get_as(variables, List, Iteration),
+    [Index1, Index2, Storing_position] = get(variables, List, Iteration),
     % Get next three elements and the opcode as input parameter
     % If the execution gets into this function we can just perform the operation because it would have hit the exit first otherwise
     % Adding 1 to the index because some retard made lists:nth not 0 index based.
     Value1 = lists:nth(Index1+1, List),
     Value2 = lists:nth(Index2+1, List),
-    Result = operation(Code, Value1, Value2),
+    Result = operation(Code, {Value1, Value2}),
     New_list = insert(Storing_position, Result, List),
-    [OpCode | _] = get_as(op_code, New_list, Iteration + 1),
-    % There is a problem because only the resulting list is updated and not the executing list
+    [OpCode | _] = get(op_code, New_list, Iteration + 1),
     loop(OpCode, New_list, Iteration + 1).
 
 for(0, _, _) -> 
@@ -111,18 +126,24 @@ verb(Iter, OuterCycle, Data) ->
         Start = 0,
         NewData = insert(2, OuterCycle, (insert(1, InnerCycle, Data))),
         %print("NewData", NewData),
-        [OpCode | _] = get_as(op_code, NewData, Start),
+        [OpCode | _] = get(op_code, NewData, Start),
         Data2 = loop(OpCode, NewData, Start),
         [H, Noun, Verb | T] = Data2,
         output_result(H, Noun, Verb, T)
      end),
     ok.
 
-test_data(v1) -> [1002,4,3,4].
+% code 1002 is read as 02010 (reversed, padded last 0 because we need 5 digits) and stands for multiply operation. 
+% Parameter 1 is in position mode because the 100th digit is a 0, meaning we have to look up the place in the list
+% Parameter 2 is in immediate mode because the thousand digit is a 1, thus we dont look up the position of the 2nd parameter but use the value instead
+% Parameter 3 is in position mode, because the tenthousand digit is a 0, meaning we have to look up the value for the position to store the result in.
+% and save it 
+
+test_data(v1) -> [1002,4,3,4,99].
 
 boot_strap(Data) ->
     Start = 0,
-    [OpCode | _] = get_as(op_code, Data, Start),
+    [OpCode | _] = get(op_code, Data, Start),
     print("opcode", OpCode),
     loop(OpCode, Data, Start).
 
@@ -141,9 +162,21 @@ test_int_to_opcodelist() ->
     [02, 0, 0, 1] = print("I10000", convert_int_to_opcodelist(I10000)),
     ok.
 
+test_operations() ->
+    Input1 = 1,
+    Input2 = 2,
+    List = [3,4,5],
+
+    3 = operation(1, {Input1, Input2}),
+    4 = operation(2, {Input2, Input2}),
+    % Override position 1 with the value 2
+    [3,2,5] = operation(3, {Input2, Input1, List}),
+    operation(4, {Input1}),
+    ok.
 
 test() ->
-    test_int_to_opcodelist(),
+    ok = test_int_to_opcodelist(),
+    ok = test_operations(),
     ok.
 
 main1() ->
