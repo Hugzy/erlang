@@ -111,28 +111,6 @@ loop(Code, List, Iteration) ->
     [OpCode | _] = get(op_code, New_list, Iteration + 1),
     loop(OpCode, New_list, Iteration + 1).
 
-for(0, _, _) -> 
-   [];
-for(N,Term, Fun) when N > 0 -> 
-    Fun(N),
-    [Term|for(N-1,Term, Fun)]. 
-
-noun(Iter, Data) ->
-    for(Iter,0, fun(N) -> verb(Iter, N, Data) end),
-    ok.
-verb(Iter, OuterCycle, Data) ->
-    for(Iter,0, fun(InnerCycle) -> 
-        %print("Loop Cycle:", [OuterCycle, InnerCycle]),
-        Start = 0,
-        NewData = insert(2, OuterCycle, (insert(1, InnerCycle, Data))),
-        %print("NewData", NewData),
-        [OpCode | _] = get(op_code, NewData, Start),
-        Data2 = loop(OpCode, NewData, Start),
-        [H, Noun, Verb | T] = Data2,
-        output_result(H, Noun, Verb, T)
-     end),
-    ok.
-
 % code 1002 is read as 02010 (reversed, padded last 0 because we need 5 digits) and stands for multiply operation. 
 % Parameter 1 is in position mode because the 100th digit is a 0, meaning we have to look up the place in the list
 % Parameter 2 is in immediate mode because the thousand digit is a 1, thus we dont look up the position of the 2nd parameter but use the value instead
