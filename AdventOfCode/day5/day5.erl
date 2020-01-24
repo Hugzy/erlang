@@ -94,7 +94,6 @@ execute([OpCode, 1, 0, 1]) ->
 execute([OpCode, 1, 1, 1]) -> 
     not_implemented.
 
-
 loop(99, Data, _) -> 
     Data;
 loop(Code, List, Iteration) -> 
@@ -116,7 +115,6 @@ loop(Code, List, Iteration) ->
 % Parameter 2 is in immediate mode because the thousand digit is a 1, thus we dont look up the position of the 2nd parameter but use the value instead
 % Parameter 3 is in position mode, because the tenthousand digit is a 0, meaning we have to look up the value for the position to store the result in.
 % and save it 
-
 test_data(v1) -> [1002,4,3,4,99].
 
 boot_strap(Data) ->
@@ -152,24 +150,31 @@ test_operations() ->
     operation(4, {Input1}),
     ok.
 
+test_execution_data() -> [
+    [2, 0, 0, 0],
+    [2, 1, 0, 0],
+    [2, 0, 1, 0],
+    [2, 0, 0, 1],
+    [2, 1, 1, 0],
+    [2, 0, 1, 1],
+    [2, 1, 0, 1],
+    [2, 1, 1, 1]
+].
+test_execution_results() ->
+    [].
+
+test_executions([H|T]) ->
+    execute(H),
+    test_executions(T);
+test_executions(_) ->
+    ok.
+
 test() ->
     ok = test_int_to_opcodelist(),
     ok = test_operations(),
+    ok = test_executions(test_execution_data()),
     ok.
 
 main1() ->
     Data = boot_strap(data()),
     print(Data).% Insert the result into the list of elements
-
-output_result(19690720, Noun, Verb, Rest) ->
-    print("Result: ", 19690720),
-    shell:strings(false),
-    print("Noun, Verb", [Noun, Verb]),
-    shell:strings(true),
-    print("Final result: ", (100*Noun+Verb));
-output_result(3562624, Noun, Verb, Rest) ->
-    print("Result", 3562624),
-    print("Final result: ", (100*Noun+Verb)),
-    print(Rest);
-output_result(_,_,_,_) ->
-    nothing.
