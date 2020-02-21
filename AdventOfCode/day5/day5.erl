@@ -78,6 +78,7 @@ convert_int_to_opcodelist(Integer) ->
     Code ++ Rest.
 
 execute([OpCode, 0, 0, 0]) -> 
+    %operation(OpCode, );
     not_implemented;
 execute([OpCode, 1, 0, 0]) -> 
     not_implemented;
@@ -94,6 +95,7 @@ execute([OpCode, 1, 0, 1]) ->
 execute([OpCode, 1, 1, 1]) -> 
     not_implemented.
 
+% Exit statement
 loop(99, Data, _) -> 
     Data;
 loop(Code, List, Iteration) -> 
@@ -102,7 +104,7 @@ loop(Code, List, Iteration) ->
     [Index1, Index2, Storing_position] = get(variables, List, Iteration),
     % Get next three elements and the opcode as input parameter
     % If the execution gets into this function we can just perform the operation because it would have hit the exit first otherwise
-    % Adding 1 to the index because some retard made lists:nth not 0 index based.
+    % Adding 1 to the index because some retard made lists:nth not 0 index based fck you srsly.
     Value1 = lists:nth(Index1+1, List),
     Value2 = lists:nth(Index2+1, List),
     Result = operation(Code, {Value1, Value2}),
@@ -161,8 +163,9 @@ test_execution_data() -> [
     [2, 1, 1, 1]
 ].
 test_execution_results() ->
-    [].
+    []. 
 
+% Recursive test, best tests
 test_executions([Actual|T], [Expected|T2]) ->
     Expected = execute(Actual),
     test_executions(T, T2);
@@ -178,3 +181,4 @@ test() ->
 main1() ->
     Data = boot_strap(data()),
     print(Data).% Insert the result into the list of elements
+
