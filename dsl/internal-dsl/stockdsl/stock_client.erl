@@ -31,44 +31,130 @@ print(Text, List) when is_list(List) ->
 %   OnEvents[...]
 %
 
-action(sell, Amount) ->
+action_builder(Operation, [Conditions]) ->
+    {Operation, Conditions}.
+operation(sell, Amount) ->
     {action, sell, Amount};
-action(buy, Amount) ->
+operation(buy, Amount) ->
     {action, buy, Amount};
-action(list, _) ->
-    {action, list}.
-condition(gtn, Amount) ->
-    {condition, gtn, Amount};
-condition(lsn, Amount) ->
-    {condition, lsn, Amount};
-condition(eq, Amount) ->
-    {condition, eq, Amount};
-condition(lsneq, Amount) ->
-    {condition, lsneq, Amount};
-condition(gtneq, Amount) ->
-    {condition, gtneq, Amount}.
-iteration(I) ->
-    {iteration, I}.
-on_event() ->
-    not_implemented.
+operation(list, _) ->
+    {action, list, void}.
+
+and_(Exp1, Exp2) ->
+    fun(Op1, Op2, Variable) ->
+        Exp1(Op1, Variable) and Exp2(Op2, Variable)
+    end.
+or_(Exp1, Exp2) ->
+    fun(Op1, Op2, V_lhs, V_rhs) ->
+        Exp1(Op1, V_lhs) or Exp2(Op2, V_rhs)
+    end.
+not_(Exp1) ->
+    fun(Op, Variable) ->
+        Exp1(Op, Variable)
+    end.
+
+condition(gtn, Variabel) ->
+    fun (Server, Lhs) ->
+        Server ! {self(), Variabel},
+        receive
+            {_, Result} ->
+                Lhs > Result
+        end
+    end;
+condition(lsn, Variabel) ->
+    fun (Server, Lhs) ->
+        Server ! {self(), Variabel},
+        receive
+            {_, Result} ->
+                Lhs < Result
+        end
+    end;
+condition(eq, Variabel) ->
+    fun (Server, Lhs) ->
+        Server ! {self(), Variabel},
+        receive
+            {_, Result} ->
+                Lhs == Result
+        end
+    end;
+condition(lsneq, Variabel) ->
+    fun (Server, Lhs) ->
+        Server ! {self(), Variabel},
+        receive
+            {_, Result} ->
+                Lhs =< Result
+        end
+    end;
+condition(gtneq, Variabel) ->
+    fun (Server, Lhs) ->
+        Server ! {self(), Variabel},
+        receive
+            {_, Result} ->
+                Lhs >= Result
+        end
+    end.
 
 run(Server, []) ->
     exit;
-run(Server, [{action, sell, Amount}|_]) ->
-    print("sending msg"),
-    Server ! {self(), {sell, Amount}},
-    receive
-        {Server, SoldAmount} ->
-            print("receiving msg"),
-            print("client", SoldAmount)
-    end.
+run(Server, [{Operation, Conditions} | Rest]) ->
+    {_, Op, Amount} = Operation,
+    Passes = passes(Conditions),
+    if  Passes == true ->
+        handle(Op, Amount);
+    true -> 
+        condition_didnt_pass
+    end,
+    print("Operation", Op),
+    print("amount", Amount).
+
+    %print("sending msg"),
+    %Server ! {self(), {sell, Amount}},
+    %receive
+    %    {Server, SoldAmount} ->
+    %        print("receiving msg"),
+    %        print("client", SoldAmount)
+    %end.
+
+handle(Op, Amount) ->
+    ok.
+
+% Should return a boolean
+passes([]) ->
+    true;
+passes(Conditions) ->
+    ok;
+passes([{and_, Fun1, Fun2} | Rest]) ->
+    ok;
+passes([{or_, Fun1, Fun2} | Rest]) ->
+    ok;
+passes([{not_, Fun1} | Rest]) ->
+    ok.
+
 
 test() ->
     ok.
 
 main(Server) ->
-    run(Server, [
-        action(sell, 2),
-        action(sell, 3),
-        action(sell,5)
-    ]).
+    run(Server,[
+    %[
+        action_builder(
+            operation(sell, 100),
+            [
+                not_(
+                    or_(                    
+                        and_(
+                            condition(gtn, stock_1),
+                            condition(gtn, stock_2)
+                        ),
+                        condition(eq, stock_3)
+                    )
+                )
+            ]),
+        action_builder(
+            operation(buy, 3),
+            [
+                condition(eq, stock_1)
+            ])
+    %].
+    ]
+).
