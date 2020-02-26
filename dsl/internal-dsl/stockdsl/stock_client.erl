@@ -23,7 +23,7 @@ print(Text, List) when is_list(List) ->
 
 
 % action {
-%   operations[...]
+%   operation
 %   conditions[...]
 %   cycles[{
 %       conditions[...]
