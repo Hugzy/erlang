@@ -33,11 +33,11 @@ loop({Amount, Value}) ->
         print("Bought Amount", BoughtAmount),
         Client ! {self(), BoughtAmount},
         loop({Amount+ClientAmount, Value});
-    {Client, {buy, Amount}} ->
-        StockLeft = 10000 - Amount,
-        Client ! {self(), Amount},
+    {Client, {buy, Amount1}} ->
+        StockLeft = Amount - Amount1,
+        Client ! {self(), Amount1},
         loop({StockLeft, Value});
-    {Client, current_stock} ->
-        Client ! {self(), {Amount,Value}}
+    {Client, _} ->
+        Client ! {self(), Value}
   end,
   loop({Amount, Value}).
