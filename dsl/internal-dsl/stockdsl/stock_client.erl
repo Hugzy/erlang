@@ -2,6 +2,15 @@
 -export([]).
 -compile([export_all]).
 
+% action {
+%   operation
+%   conditions[...]
+%   cycles[{
+%       conditions[...]
+%       }]
+%   OnEvents[...]
+%
+
 print(Atom) when is_atom(Atom) ->
     io:fwrite("~p \n", [Atom]),
     Atom;
@@ -20,17 +29,6 @@ print(Text, Atom) when is_integer(Atom) ->
 print(Text, List) when is_list(List) ->
     io:fwrite("~p: ~128p~n", [Text, List]),
     List.
-
-
-% action {
-%   operation
-%   conditions[...]
-%   cycles[{
-%       conditions[...]
-%       }]
-%   OnEvents[...]
-%
-
 action_builder(Operation, Conditions) ->
     {Operation, Conditions}.
 operation(sell, Amount) ->
