@@ -130,7 +130,7 @@ passes(Server, {not_, Fun1}) ->
 passes(Server, {condition, Fun}) ->
     Fun(Server).
 
-test_operation(Server) ->
+test_operations(Server) ->
     {_, Op, Value} = operation(sell, 100),
     300 = handle(Server, Op, Value),
     {_, Op1, Value1} = operation(buy, 10),
@@ -139,14 +139,14 @@ test_operation(Server) ->
     3 = handle(Server, Op2, void),
     ok.
 
-test_condition(Server) ->
+test_conditions(Server) ->
     Condition = not_(condition(100, gtn, stock_2)),
     false = passes(Server, Condition),
     ok.
 
 test(Server) ->
-    ok = test_operation(Server),
-    ok = test_condition(Server),
+    ok = test_operations(Server),
+    ok = test_conditions(Server),
     ok.
 
 main(Server) ->
