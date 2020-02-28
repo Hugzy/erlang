@@ -4,7 +4,9 @@
 
 % action {
 %   operation
-%   conditions[...]
+%   condition{
+%       condition
+%   }
 %   cycles[{
 %       conditions[...]
 %       }]
@@ -29,8 +31,8 @@ print(Text, Atom) when is_integer(Atom) ->
 print(Text, List) when is_list(List) ->
     io:fwrite("~p: ~128p~n", [Text, List]),
     List.
-action_builder(Operation, Conditions) ->
-    {Operation, Conditions}.
+action_builder(Operations, Conditions) ->
+    {Operations, Conditions}.
 operation(sell, Amount) ->
     {action, sell, Amount};
 operation(buy, Amount) ->
@@ -98,10 +100,26 @@ condition(Value, gtneq, Stock_reference) when is_atom(Stock_reference) ->
 condition(_,_,_) ->
     true.
 
-run(_, []) ->
+for(N, N, Fun) ->
+    Fun();
+for(I, N, Fun) ->
+    Fun(),
+    for(I+1, N, Fun).
+
+loop(_, []) ->
     exit;
-run(Server, [{Operation, Condition} | Rest]) ->
-    {_, Op, Amount} = Operation,
+loop(Server, [{Operations, Condition} | Rest]) ->
+    %print("operation", Operations),
+    %spawn(stock_server, run_action, [Server, Operations, Condition]),%
+    run_action(Server, Operations, Condition),
+    loop(Server, Rest).
+
+run_action(_, [], _) ->
+    print("end of action loop"),
+    noop;
+run_action(Server, Operations, Condition) ->
+    %print("operations", Operations),
+    [{_, Op, Amount}|Tail] = Operations,
     Passes = passes(Server, Condition),
     if  Passes == true ->
         Result = handle(Server, Op, Amount),
@@ -109,7 +127,7 @@ run(Server, [{Operation, Condition} | Rest]) ->
     true -> 
         print("condition_didnt_pass")
     end,
-    run(Server, Rest).
+    run_action(Server, Tail, Condition).
 
 handle(Server, Op, Value) ->
     Server ! {self(), {Op, Value}},
@@ -129,11 +147,11 @@ passes(Server, {condition, Fun}) ->
     Fun(Server).
 
 test_operations(Server) ->
-    {_, Op, Value} = operation(sell, 100),
+    [{_, Op, Value}|_] = [operation(sell, 100)],
     300 = handle(Server, Op, Value),
-    {_, Op1, Value1} = operation(buy, 10),
+    [{_, Op1, Value1}|_] = [operation(buy, 10)],
     10 = handle(Server, Op1, Value1),
-    {_, Op2, _} = operation(list, void),
+    [{_, Op2, _}|_] = [operation(list, void)],
     3 = handle(Server, Op2, void),
     ok.
 
@@ -148,26 +166,33 @@ test(Server) ->
     ok.
 
 main(Server) ->
-    run(Server,[
+    loop(Server,[
     %[
         action_builder(
-            operation(sell, 100),
+            [
+                operation(sell, 100),
+                operation(buy, 200),
+                operation(sell, 50)
+            ],
             not_(
-                not_(
-                    condition(100, gtn, stock_2)
+                or_(
+                    condition(100, gtn, stock_2),
+                    condition(100, eq, stock_1)
                 )
             )
         ),
         action_builder(
-            operation(sell, 100),
+            [
+                operation(sell, 100)
+            ],
             not_(
                 condition(100, gtn, stock_2)
             )
         ),
         action_builder(
-            operation(buy, 3),
+            [operation(buy, 3)],
             condition(3, eq, stock_1)
-            )
+        )
     %].
     ]
 ).
