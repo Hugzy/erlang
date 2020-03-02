@@ -100,12 +100,6 @@ condition(Value, gtneq, Stock_reference) when is_atom(Stock_reference) ->
 condition(_,_,_) ->
     true.
 
-for(N, N, Fun) ->
-    Fun();
-for(I, N, Fun) ->
-    Fun(),
-    for(I+1, N, Fun).
-
 loop(_, []) ->
     exit;
 loop(Server, [{Operations, Condition} | Rest]) ->
