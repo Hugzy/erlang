@@ -190,7 +190,9 @@ main(Server) ->
             )
         ),
         action_builder(
-            [operation(buy, 3)],
+            [
+                operation(buy, 3)
+            ],
             condition(3, eq, stock_1)
         )
     %].
