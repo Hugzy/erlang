@@ -3,16 +3,11 @@
 -compile([export_all]).
 
 % action {
-%   operation
-%   condition{
-%       condition
+%   [operation]
+%   ConditionTree{
+%       conditions...
 %   }
-%   cycles[{
-%       conditions[...]
-%       }]
-%   OnEvents[...]
-%
-
+%}
 print(Atom) when is_atom(Atom) ->
     io:fwrite("~p \n", [Atom]),
     Atom;
@@ -103,8 +98,7 @@ condition(_,_,_) ->
 loop(_, []) ->
     exit;
 loop(Server, [{Operations, Condition} | Rest]) ->
-    %print("operation", Operations),
-    %spawn(stock_server, run_action, [Server, Operations, Condition]),%
+
     run_action(Server, Operations, Condition),
     loop(Server, Rest).
 
@@ -112,7 +106,6 @@ run_action(_, [], _) ->
     print("end of action loop"),
     noop;
 run_action(Server, Operations, Condition) ->
-    %print("operations", Operations),
     [{_, Op, Amount}|Tail] = Operations,
     Passes = passes(Server, Condition),
     if  Passes == true ->
@@ -159,9 +152,10 @@ test(Server) ->
     ok = test_conditions(Server),
     ok.
 
-main(Server) ->
+
+large_example(Server) ->
+    print("Large Example"),
     loop(Server,[
-    %[
         action_builder(
             [
                 operation(sell, 100),
@@ -169,9 +163,11 @@ main(Server) ->
                 operation(sell, 50)
             ],
             not_(
-                or_(
-                    condition(100, gtn, stock_2),
-                    condition(100, eq, stock_1)
+                not_(
+                    or_(
+                        condition(100, gtn, stock_2),
+                        condition(100, eq, stock_1)
+                    )
                 )
             )
         ),
@@ -180,15 +176,32 @@ main(Server) ->
                 operation(sell, 100)
             ],
             not_(
-                condition(100, gtn, stock_2)
+                and_(
+                    condition(100, gtn, stock_2),
+                    condition(3, eq, stock_1)
+                    )
             )
         ),
         action_builder(
             [
                 operation(buy, 3)
             ],
-            condition(3, eq, stock_1)
-        )
-    %].
-    ]
-).
+                condition(3, eq, stock_1)
+            )
+        ]
+    ).
+
+small_example(Server) ->
+    print("Small Example"),
+    loop(Server, [
+            action_builder(
+            [
+                operation(sell, 100) % Sell 100 of a specifik stock
+            ], 
+            condition(3, eq, stock_1)) % only if the value of stock_1 is equal to 1
+        ]
+    ).
+
+main(Server) ->
+    large_example(Server),
+    small_example(Server).
